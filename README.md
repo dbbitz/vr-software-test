@@ -12,7 +12,7 @@ Sistema fullstack para processamento de notificações em tempo real com Angular
 
 ### Clonar o repositório
 ```bash
-git clone https://github.com/SEU_USUARIO/vr-software-fullstack-test.git
+git clone https://github.com/dbbitz/vr-software-fullstack-test.git
 cd vr-software-fullstack-test
 ```
 
