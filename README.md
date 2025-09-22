@@ -115,9 +115,6 @@ npm run test:watch
 # Executar testes com coverage
 npm run test:cov
 
-# Executar testes end-to-end
-npm run test:e2e
-
 # Debug de testes
 npm run test:debug
 ```
