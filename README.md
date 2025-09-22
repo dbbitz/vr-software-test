@@ -86,6 +86,45 @@ cd server
 npm run build
 npm run start:prod
 ```
+## 🧪 Executar Testes
+
+### Frontend (Angular + Jasmine/Karma)
+```bash
+cd client
+
+# Executar testes unitários
+npm test
+
+# Executar testes com coverage
+npm test -- --code-coverage
+
+# Executar testes em modo watch
+npm test -- --watch
+```
+
+### Backend (NestJS + Jest)
+```bash
+cd server
+
+# Executar todos os testes
+npm test
+
+# Executar testes em modo watch
+npm run test:watch
+
+# Executar testes com coverage
+npm run test:cov
+
+# Executar testes end-to-end
+npm run test:e2e
+
+# Debug de testes
+npm run test:debug
+```
+
+### Coverage Reports
+- **Frontend**: `client/coverage/` (após executar com `--code-coverage`)
+- **Backend**: `server/coverage/` (após executar `npm run test:cov`)
 
 ## 🔧 Configuração de Ambiente
 
