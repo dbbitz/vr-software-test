@@ -1,0 +1,92 @@
+<div class="notification-container">
+  <div class="header">
+    <h1>Sistema de Notificações</h1>
+    <div class="connection-status">
+      <span
+        class="status-indicator"
+        [class.connected]="isConnected"
+        [class.disconnected]="!isConnected"
+      ></span>
+      <span class="status-text">{{
+        isConnected ? "Conectado" : "Desconectado"
+      }}</span>
+    </div>
+  </div>
+
+  <div class="form-section">
+    <div class="form-group">
+      <label for="mensagem">Mensagem:</label>
+      <textarea
+        id="mensagem"
+        [(ngModel)]="mensagem"
+        placeholder="Digite sua mensagem aqui..."
+        rows="3"
+        class="form-control"
+        [disabled]="isLoading"
+      >
+      </textarea>
+    </div>
+
+    <div class="form-actions">
+      <button
+        (click)="enviarNotificacao()"
+        [disabled]="isLoading || !mensagem.trim()"
+        class="btn btn-primary"
+      >
+        <span *ngIf="isLoading" class="spinner"></span>
+        {{ isLoading ? "Enviando..." : "Enviar Notificação" }}
+      </button>
+
+      <button (click)="recarregarLista()" class="btn btn-secondary">
+        Recarregar Lista
+      </button>
+    </div>
+  </div>
+
+  <div class="notifications-section">
+    <div class="section-header">
+      <h2>Notificações ({{ notificacoes.length }})</h2>
+    </div>
+
+    <div *ngIf="notificacoes.length === 0" class="empty-state">
+      <p>Nenhuma notificação encontrada.</p>
+      <p>Envie uma mensagem para começar!</p>
+    </div>
+
+    <div class="notifications-list" *ngIf="notificacoes.length > 0">
+      <div
+        *ngFor="let notificacao of notificacoes; trackBy: trackByMensagemId"
+        class="notification-item"
+        [class]="getStatusClass(notificacao.status)"
+      >
+        <div class="notification-header">
+          <div class="message-id">
+            <strong>ID:</strong> {{ notificacao.mensagemId }}
+          </div>
+          <div
+            class="status-badge"
+            [class]="getStatusClass(notificacao.status)"
+          >
+            {{ getStatusText(notificacao.status) }}
+          </div>
+        </div>
+
+        <div class="notification-content">
+          <div class="message-content">
+            <strong>Mensagem:</strong> {{ notificacao.conteudoMensagem }}
+          </div>
+        </div>
+
+        <div class="notification-footer">
+          <div class="timestamp">
+            <strong>Criado em:</strong> {{ formatDate(notificacao.timestamp) }}
+          </div>
+          <div *ngIf="notificacao.processedAt" class="processed-timestamp">
+            <strong>Processado em:</strong>
+            {{ formatDate(notificacao.processedAt) }}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
