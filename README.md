@@ -37,6 +37,7 @@ cp .env.example .env
 ```bash
 cd client  
 cp .env.example .env
+node ./scripts/build-env.js
 ```
 
 ### 3. Iniciar RabbitMQ
