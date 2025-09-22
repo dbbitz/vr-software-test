@@ -29,10 +29,75 @@ export class RabbitMQService implements OnModuleInit, OnModuleDestroy {
 
   private async connect(): Promise<void> {
     try {
-      // Conecta ao RabbitMQ com credenciais do Docker Compose
-      this.connection = await amqp.connect(
-        `amqp://${process.env.RABBITMQ_USER}:${process.env.RABBITMQ_PASS}@${process.env.RABBITMQ_HOST}:${process.env.RABBITMQ_PORT}`
-      );
+      // URLs para teste
+      const cloudAMQPUrls = [
+        "amqp://bjnuffmq:gj-YQIiEXyfxQxjsZtiYDKeXIT8ppUq7@jaragua-01.lmq.cloudamqp.com/bjnuffmq",
+        "amqp://bjnuffmq:gj-YQIiEXyfxQxjsZtiYDKeXIT8ppUq7@jaragua-01.lmq.cloudamqp.com",
+        "amqps://bjnuffmq:gj-YQIiEXyfxQxjsZtiYDKeXIT8ppUq7@jaragua-01.lmq.cloudamqp.com/bjnuffmq",
+      ];
+      const localUrl = "amqp://admin:admin123@localhost:5672";
+
+      let connectionUrl = process.env.RABBITMQ_URL;
+      let isCloudAMQP = true;
+      let connected = false;
+
+      // Se não há variável de ambiente, tenta CloudAMQP primeiro
+      if (!connectionUrl) {
+        for (const url of cloudAMQPUrls) {
+          try {
+            this.logger.log(
+              `Tentando conectar ao CloudAMQP: ${url.replace(/:[^:@]*@/, ":***@")}`
+            );
+
+            const connectionOptions = {
+              heartbeat: 60,
+              connectionTimeout: 10000,
+            };
+
+            this.connection = await amqp.connect(url, connectionOptions);
+            connectionUrl = url;
+            connected = true;
+            this.logger.log("Conectado ao CloudAMQP com sucesso");
+            break;
+          } catch (cloudError) {
+            this.logger.warn(
+              `Falha com URL ${url.replace(/:[^:@]*@/, ":***@")}: ${cloudError.message}`
+            );
+          }
+        }
+      } else {
+        // Usa a variável de ambiente
+        try {
+          const connectionOptions = {
+            heartbeat: 60,
+            connectionTimeout: 10000,
+          };
+
+          this.connection = await amqp.connect(
+            connectionUrl,
+            connectionOptions
+          );
+          connected = true;
+          this.logger.log("Conectado usando variável de ambiente");
+        } catch (envError) {
+          this.logger.warn(
+            `Falha com variável de ambiente: ${envError.message}`
+          );
+        }
+      }
+
+      if (!connected) {
+        // Tenta RabbitMQ local como fallback
+        this.logger.warn(
+          "Falha ao conectar ao CloudAMQP, tentando RabbitMQ local..."
+        );
+        isCloudAMQP = false;
+        connectionUrl = localUrl;
+
+        this.connection = await amqp.connect(connectionUrl);
+        this.logger.log("Conectado ao RabbitMQ local com sucesso");
+      }
+
       this.channel = await this.connection.createChannel();
 
       // Declara as filas
@@ -40,21 +105,28 @@ export class RabbitMQService implements OnModuleInit, OnModuleDestroy {
       await this.channel.assertQueue(this.QUEUE_STATUS, { durable: true });
 
       this.isConnected = true;
-      this.logger.log("Conectado ao RabbitMQ com sucesso");
       this.logger.log(
         `Filas criadas: ${this.QUEUE_ENTRADA}, ${this.QUEUE_STATUS}`
       );
+
+      if (isCloudAMQP) {
+        this.logger.log(
+          "URL de gerenciamento: https://jaragua-01.lmq.cloudamqp.com"
+        );
+      } else {
+        this.logger.log(
+          "URL de gerenciamento local: http://localhost:15672 (admin/admin123)"
+        );
+      }
     } catch (error) {
       this.isConnected = false;
       this.logger.error("Erro ao conectar com RabbitMQ:", error);
+      this.logger.error("Tentativas:");
       this.logger.error(
-        "Certifique-se de que o RabbitMQ está rodando em localhost:5672"
+        "1. CloudAMQP: https://jaragua-01.lmq.cloudamqp.com (bjnuffmq)"
       );
+      this.logger.error("2. Local: http://localhost:15672 (admin/admin123)");
       this.logger.error("Execute: docker-compose up -d");
-      this.logger.error(
-        "Aguarde alguns segundos para o RabbitMQ inicializar completamente"
-      );
-      this.logger.error("Credenciais: admin/admin123");
       throw error;
     }
   }
